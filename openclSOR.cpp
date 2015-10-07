@@ -15,7 +15,7 @@
 size_t const BLOCK_SIZE = 16;
 int width = 800;
 int height = 800;
-int itmax = 5000;
+int itmax = 1000;
 float const omega = 1.97;
 float const beta = (((1.0/width) / (1.0/height))*((1.0/width) / (1.0/height)));
 
@@ -149,6 +149,7 @@ int main(){
 	size_t local_ws[2] = {16, 16};
 	size_t global_ws[2] = {800, 800};
 
+	double start_time = clock();
 
 	for(int i=0; i<itmax; i++){
 		
@@ -205,6 +206,10 @@ int main(){
 		errVal = clFinish(queue);
 		errorFunc(errVal, "oddeven_mm clFinish");
 
+		double end_time = clock();
+		double processing_time = (end_time-start_time)/CLOCKS_PER_SEC;
+		std::cout<< "OpenCL computation time: "<< processing_time<<" seconds"<<std::endl;
+
 		float *C;
 		C = new float[memsize];
 		memset(C,0,memsize*sizeof(float));
@@ -212,6 +217,22 @@ int main(){
 		errorFunc(errVal, "EnqueueReadBuffer");
 
 		write_output(C);
+		// Freeing the memory
+		clReleaseMemObject(odd);
+		clReleaseMemObject(even);
+		clReleaseCommandQueue(queue);
+		clReleaseKernel(odd_mm);
+		clReleaseKernel(even_mm);
+		clReleaseKernel(oddeven_mm);
+		clReleaseProgram(program_mm);
+		clReleaseContext(context_mm);
+
+		delete [] x;
+		delete [] y;
+		delete [] solution;
+		delete [] C;
+
+		std::cout<< "Completed" << std::endl;
 
 return 0;
 }
